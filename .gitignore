@@ -1,0 +1,38 @@
+# =============================================
+# TotalKit ERP - Archivos a excluir de GitHub
+# =============================================
+
+# Archivo de configuración con credenciales reales
+config.php
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos de IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos temporales de PHP
+*.log
+*.tmp
+*.cache
+
+# Carpetas de dependencias (si se usan en el futuro)
+vendor/
+node_modules/
+
+# Archivos de backup
+*.bak
+*.backup
+*.old
+*~
+
+# Archivos de base de datos locales
+*.sql.gz
+*.sql.zip
+backup_*.sql
+INSTALACION.sql

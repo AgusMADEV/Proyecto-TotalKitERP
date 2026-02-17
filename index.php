@@ -1,17 +1,8 @@
 <?php
 session_start();
 
-// =============================================
-// CONFIGURACIÓN
-// =============================================
-$db_host = "localhost";
-$db_name = "tienda_camisetas";
-$db_user = "";
-$db_pass = "";
-
-// Credenciales de login
-$usuario_valido = "";
-$contrasena_valida = "";
+// Cargar configuración
+require_once 'config.php';
 
 $login_error = "";
 
@@ -32,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     $user = $_POST['usuario'] ?? '';
     $pass = $_POST['contrasena'] ?? '';
 
-    if ($user === $usuario_valido && $pass === $contrasena_valida) {
+    if ($user === LOGIN_USUARIO && $pass === LOGIN_PASSWORD) {
         $_SESSION['usuario'] = $user;
         header("Location: ?");
         exit;
@@ -45,11 +36,10 @@ $logged_in = isset($_SESSION['usuario']);
 
 // Conexión a la base de datos solo si hay sesión iniciada
 if ($logged_in) {
-    $conexion = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+    $conexion = obtener_conexion();
     if (!$conexion) {
         die("Error de conexión: " . mysqli_connect_error());
     }
-    mysqli_set_charset($conexion, "utf8");
 }
 
 // =============================================
@@ -59,7 +49,7 @@ if ($logged_in) {
 /**
  * Obtener claves foráneas de una tabla
  */
-function obtener_claves_foraneas($conexion, $tabla, $bd) {
+function obtener_claves_foraneas($conexion, $tabla, $bd = DB_NAME) {
     $fk = [];
     $sql = "
         SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
@@ -83,7 +73,7 @@ function obtener_claves_foraneas($conexion, $tabla, $bd) {
 /**
  * Obtener metadatos de columnas de una tabla
  */
-function obtener_meta_columnas($conexion, $tabla, $bd) {
+function obtener_meta_columnas($conexion, $tabla, $bd = DB_NAME) {
     $meta = [];
     $sql = "
         SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT,
@@ -104,7 +94,7 @@ function obtener_meta_columnas($conexion, $tabla, $bd) {
 /**
  * Obtener nombre de la columna clave primaria
  */
-function obtener_pk_columna($conexion, $tabla, $bd) {
+function obtener_pk_columna($conexion, $tabla, $bd = DB_NAME) {
     $sql = "
         SELECT COLUMN_NAME
         FROM INFORMATION_SCHEMA.COLUMNS
@@ -309,8 +299,8 @@ if ($logged_in) {
         $campos = [];
         $valores = [];
         
-        $meta = obtener_meta_columnas($conexion, $tabla_actual, $db_name);
-        $pk = obtener_pk_columna($conexion, $tabla_actual, $db_name);
+        $meta = obtener_meta_columnas($conexion, $tabla_actual, DB_NAME);
+        $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
         
         foreach ($_POST as $campo => $valor) {
             if ($campo !== 'accion' && $campo !== $pk && isset($meta[$campo])) {
@@ -331,7 +321,7 @@ if ($logged_in) {
 
     // Obtener todas las tablas
     $tablas = [];
-    $sql_tablas = "SHOW TABLES FROM " . $db_name;
+    $sql_tablas = "SHOW TABLES FROM " . DB_NAME;
     $resultado_tablas = mysqli_query($conexion, $sql_tablas);
     if ($resultado_tablas) {
         while ($fila = mysqli_fetch_row($resultado_tablas)) {
@@ -405,6 +395,9 @@ if ($logged_in) {
                 <a href="?vista=dashboard" class="nav-item <?= $vista_actual === 'dashboard' ? 'active' : '' ?>">
                     🏠 Dashboard
                 </a>
+                <a href="?vista=buscar" class="nav-item <?= $vista_actual === 'buscar' ? 'active' : '' ?>">
+                    🔍 Buscar Productos
+                </a>
 
                 <h3>📋 Gestión de Tablas</h3>
                 <?php foreach ($tablas as $tabla): ?>
@@ -425,6 +418,8 @@ if ($logged_in) {
                 <h1>
                     <?php if ($vista_actual === 'dashboard'): ?>
                         📊 Dashboard Principal
+                    <?php elseif ($vista_actual === 'buscar'): ?>
+                        🔍 Buscador de Productos
                     <?php elseif ($tabla_actual): ?>
                         📄 Gestión de <?= ucfirst(str_replace('_', ' ', $tabla_actual)) ?>
                     <?php endif; ?>
@@ -536,6 +531,154 @@ if ($logged_in) {
                         ?>
                     </div>
 
+                <?php elseif ($vista_actual === 'buscar'): ?>
+                    <!-- BUSCADOR DE PRODUCTOS -->
+                    <div class="search-container">
+                        <div class="search-header">
+                            <h2>🔍 Búsqueda Avanzada de Productos</h2>
+                            <div class="search-bar">
+                                <div class="search-input-wrapper">
+                                    <input type="text" id="busqueda-texto" placeholder="Buscar por nombre, equipo, marca, jugador...">
+                                </div>
+                                <button class="btn-limpiar" id="btn-limpiar-filtros">🧹 Limpiar Filtros</button>
+                            </div>
+                        </div>
+
+                        <div class="filtros-container">
+                            <div class="filtros-toggle" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                                <h3>⚙️ Filtros Avanzados</h3>
+                                <span>▼</span>
+                            </div>
+                            
+                            <div class="filtros-content">
+                                <div class="filtros-grid">
+                                    <div class="filtro-grupo">
+                                        <label>⚽ Equipo</label>
+                                        <select id="filtro-equipo">
+                                            <option value="">Todos los equipos</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="filtro-grupo">
+                                        <label>🏆 Liga</label>
+                                        <select id="filtro-liga">
+                                            <option value="">Todas las ligas</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="filtro-grupo">
+                                        <label>🏷️ Marca</label>
+                                        <select id="filtro-marca">
+                                            <option value="">Todas las marcas</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="filtro-grupo">
+                                        <label>📅 Temporada</label>
+                                        <select id="filtro-temporada">
+                                            <option value="">Todas las temporadas</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="filtro-grupo">
+                                        <label>👕 Tipo de Camiseta</label>
+                                        <select id="filtro-tipo">
+                                            <option value="">Todos los tipos</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="filtro-grupo">
+                                        <label>📏 Talla</label>
+                                        <select id="filtro-talla">
+                                            <option value="">Todas las tallas</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="filtros-grid" style="margin-top: 1rem;">
+                                    <div class="filtro-grupo">
+                                        <label>💰 Rango de Precio</label>
+                                        <div class="precio-range">
+                                            <input type="number" id="filtro-precio-min" placeholder="Mínimo" step="0.01" min="0">
+                                            <input type="number" id="filtro-precio-max" placeholder="Máximo" step="0.01" min="0">
+                                        </div>
+                                    </div>
+
+                                    <div class="filtro-grupo">
+                                        <label>🎯 Tipo de Equipo</label>
+                                        <div class="radio-group">
+                                            <div class="radio-item">
+                                                <input type="radio" id="radio-todos-equipos" name="tipo-equipo" value="" checked>
+                                                <label for="radio-todos-equipos">Todos</label>
+                                            </div>
+                                            <div class="radio-item">
+                                                <input type="radio" id="radio-clubes" name="tipo-equipo" value="0">
+                                                <label for="radio-clubes">⚽ Clubes</label>
+                                            </div>
+                                            <div class="radio-item">
+                                                <input type="radio" id="radio-selecciones" name="tipo-equipo" value="1">
+                                                <label for="radio-selecciones">🌍 Selecciones</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="filtros-checks">
+                                    <div class="check-item">
+                                        <input type="checkbox" id="filtro-solo-stock">
+                                        <label for="filtro-solo-stock">📦 Solo con stock disponible</label>
+                                    </div>
+                                    <div class="check-item">
+                                        <input type="checkbox" id="filtro-destacados">
+                                        <label for="filtro-destacados">⭐ Solo productos destacados</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controles de vista y ordenamiento -->
+                    <div class="search-container">
+                        <div class="search-controls">
+                            <div class="view-controls">
+                                <button class="btn-view active" id="btn-vista-grid" title="Vista en cuadrícula">
+                                    ▦
+                                </button>
+                                <button class="btn-view" id="btn-vista-lista" title="Vista en lista">
+                                    ☰
+                                </button>
+                            </div>
+
+                            <div class="sort-controls">
+                                <label>Ordenar por:</label>
+                                <select id="select-orden">
+                                    <option value="p.fecha_creacion|DESC">Más recientes</option>
+                                    <option value="p.fecha_creacion|ASC">Más antiguos</option>
+                                    <option value="p.nombre_producto|ASC">Nombre (A-Z)</option>
+                                    <option value="p.nombre_producto|DESC">Nombre (Z-A)</option>
+                                    <option value="e.nombre_equipo|ASC">Equipo (A-Z)</option>
+                                    <option value="p.precio|ASC">Precio (menor a mayor)</option>
+                                    <option value="p.precio|DESC">Precio (mayor a menor)</option>
+                                    <option value="p.stock|DESC">Mayor stock</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="estadisticas-busqueda" id="estadisticas-busqueda">
+                            <!-- Las estadísticas se cargarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Resultados de búsqueda -->
+                    <div class="search-container">
+                        <div class="resultados-container" id="resultados-busqueda">
+                            <!-- Los resultados se cargarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Script del buscador -->
+                    <script src="buscador.js"></script>
+
                 <?php elseif ($tabla_actual): ?>
                     <!-- VISTA DE TABLA -->
                     <div class="table-section">
@@ -547,9 +690,9 @@ if ($logged_in) {
                                 
                                 <div class="form-grid">
                                     <?php
-                                    $meta = obtener_meta_columnas($conexion, $tabla_actual, $db_name);
-                                    $pk = obtener_pk_columna($conexion, $tabla_actual, $db_name);
-                                    $fks = obtener_claves_foraneas($conexion, $tabla_actual, $db_name);
+$meta = obtener_meta_columnas($conexion, $tabla_actual, DB_NAME);
+                    $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
+                    $fks = obtener_claves_foraneas($conexion, $tabla_actual, DB_NAME);
                                     
                                     foreach ($meta as $nombre_col => $info_col) {
                                         // Saltar PK auto_increment y timestamps automáticos
@@ -618,6 +761,6 @@ if ($logged_in) {
 
 <?php
 if ($logged_in && isset($conexion)) {
-    mysqli_close($conexion);
+    cerrar_conexion($conexion);
 }
 ?>
