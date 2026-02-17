@@ -36,3 +36,5 @@ node_modules/
 *.sql.zip
 backup_*.sql
 INSTALACION.sql
+color-palette.png
+color-palette2.png

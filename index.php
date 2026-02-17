@@ -253,7 +253,7 @@ function render_pie_chart($segmentos, $titulo = "Gráfico") {
         $percent = ($valor / $total) * 100.0;
         $dasharray = $percent . " " . (100 - $percent);
         $dashoffset = 25 - $acumulado;
-
+ 
         echo "<circle class='donut-segment segment-" . $index . "' cx='21' cy='21' r='15.915' ";
         echo "stroke-dasharray='" . $dasharray . "' stroke-dashoffset='" . $dashoffset . "'></circle>";
 
@@ -292,7 +292,7 @@ function render_pie_chart($segmentos, $titulo = "Gráfico") {
 
 if ($logged_in) {
     $tabla_actual = $_GET['tabla'] ?? null;
-    $vista_actual = $_GET['vista'] ?? 'dashboard';
+    $vista_actual = $_GET['vista'] ?? ($tabla_actual ? 'tabla' : 'dashboard');
 
     // Insertar nuevo registro
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'insertar' && $tabla_actual) {
@@ -416,119 +416,91 @@ if ($logged_in) {
         <main class="main-content">
             <header class="content-header">
                 <h1>
-                    <?php if ($vista_actual === 'dashboard'): ?>
-                        📊 Dashboard Principal
+                    <?php if ($tabla_actual && $vista_actual !== 'dashboard' && $vista_actual !== 'buscar'): ?>
+                        📄 Gestión de <?= ucfirst(str_replace('_', ' ', $tabla_actual)) ?>
                     <?php elseif ($vista_actual === 'buscar'): ?>
                         🔍 Buscador de Productos
-                    <?php elseif ($tabla_actual): ?>
-                        📄 Gestión de <?= ucfirst(str_replace('_', ' ', $tabla_actual)) ?>
+                    <?php else: ?>
+                        📊 Dashboard Principal
                     <?php endif; ?>
                 </h1>
             </header>
 
             <div class="content-body">
-                <?php if ($vista_actual === 'dashboard'): ?>
-                    <!-- DASHBOARD -->
-                    <div class="dashboard-grid">
-                        <!-- Estadísticas generales -->
-                        <div class="stat-card">
-                            <div class="stat-icon">�</div>
-                            <div class="stat-info">
-                                <h3>Total Camisetas</h3>
-                                <?php
-                                $result = mysqli_query($conexion, "SELECT COUNT(*) as total FROM productos");
-                                $total = mysqli_fetch_assoc($result)['total'];
-                                ?>
-                                <p class="stat-number"><?= $total ?></p>
-                            </div>
+                <?php if ($tabla_actual && $vista_actual !== 'dashboard' && $vista_actual !== 'buscar'): ?>
+                    <!-- VISTA DE TABLA -->
+                    <div class="table-section">
+                        <!-- Formulario de inserción -->
+                        <div class="insert-form">
+                            <h2>➕ Insertar Nuevo Registro</h2>
+                            <form method="POST" action="?tabla=<?= $tabla_actual ?>">
+                                <input type="hidden" name="accion" value="insertar">
+                                
+                                <div class="form-grid">
+                                    <?php
+                                    $meta = obtener_meta_columnas($conexion, $tabla_actual, DB_NAME);
+                                    $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
+                                    $fks = obtener_claves_foraneas($conexion, $tabla_actual, DB_NAME);
+                                    
+                                    foreach ($meta as $nombre_col => $info_col) {
+                                        // Saltar PK auto_increment y timestamps automáticos
+                                        if ($nombre_col === $pk && strpos($info_col['EXTRA'], 'auto_increment') !== false) {
+                                            continue;
+                                        }
+                                        if (in_array($nombre_col, ['fecha_creacion', 'fecha_registro', 'fecha_pedido', 'fecha_resena'])) {
+                                            continue;
+                                        }
+                                        
+                                        echo "<div class='form-field'>";
+                                        
+                                        // Si es FK, mostrar select
+                                        if (isset($fks[$nombre_col])) {
+                                            $tabla_ref = $fks[$nombre_col]['tabla'];
+                                            $columna_ref = $fks[$nombre_col]['columna'];
+                                            
+                                            echo "<label>" . htmlspecialchars($nombre_col) . "</label>";
+                                            echo "<select name='" . $nombre_col . "'>";
+                                            echo "<option value=''>-- seleccionar --</option>";
+                                            
+                                            $sql_fk = "SELECT * FROM " . $tabla_ref;
+                                            $result_fk = mysqli_query($conexion, $sql_fk);
+                                            if ($result_fk) {
+                                                while ($row_fk = mysqli_fetch_assoc($result_fk)) {
+                                                    $texto = implode(" - ", array_slice($row_fk, 0, 3));
+                                                    echo "<option value='" . $row_fk[$columna_ref] . "'>" . htmlspecialchars($texto) . "</option>";
+                                                }
+                                            }
+                                            echo "</select>";
+                                        } else {
+                                            echo render_input_para_columna($nombre_col, $info_col);
+                                        }
+                                        
+                                        echo "</div>";
+                                    }
+                                    ?>
+                                </div>
+                                
+                                <button type="submit" class="btn-primary">💾 Guardar Registro</button>
+                            </form>
                         </div>
 
-                        <div class="stat-card">
-                            <div class="stat-icon">👥</div>
-                            <div class="stat-info">
-                                <h3>Total Clientes</h3>
-                                <?php
-                                $result = mysqli_query($conexion, "SELECT COUNT(*) as total FROM clientes");
-                                $total = mysqli_fetch_assoc($result)['total'];
-                                ?>
-                                <p class="stat-number"><?= $total ?></p>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon">👕</div>
-                            <div class="stat-info">
-                                <h3>Total Camisetas</h3>
-                                <?php
-                                $result = mysqli_query($conexion, "SELECT COUNT(*) as total FROM pedidos");
-                                $total = mysqli_fetch_assoc($result)['total'];
-                                ?>
-                                <p class="stat-number"><?= $total ?></p>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon">💰</div>
-                            <div class="stat-info">
-                                <h3>Ingresos Totales</h3>
-                                <?php
-                                $result = mysqli_query($conexion, "SELECT SUM(total) as total FROM pedidos");
-                                $total = mysqli_fetch_assoc($result)['total'] ?? 0;
-                                ?>
-                                <p class="stat-number"><?= number_format($total, 2) ?>€</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Gráficos -->
-                    <div class="charts-grid">
-                        <?php
-                        // Camisetas por equipo
-                        $sql = "SELECT e.nombre_equipo as label, COUNT(p.id_producto) as total 
-                                FROM equipos e 
-                                LEFT JOIN productos p ON e.id_equipo = p.id_equipo 
-                                GROUP BY e.id_equipo
-                                ORDER BY total DESC
-                                LIMIT 8";
-                        $result = mysqli_query($conexion, $sql);
-                        $datos = [];
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            if ($row['total'] > 0) {
-                                $datos[] = $row;
+                        <!-- Tabla de datos -->
+                        <div class="data-view">
+                            <h2>📋 Listado de Registros</h2>
+                            <?php
+                            $sql = "SELECT * FROM " . $tabla_actual . " LIMIT 100";
+                            $result = mysqli_query($conexion, $sql);
+                            if ($result) {
+                                $datos = [];
+                                while ($row = mysqli_fetch_assoc($result)) {
+                                    $datos[] = $row;
+                                }
+                                render_tabla_html($datos);
+                            } else {
+                                echo "<p class='no-data'>❌ Error al cargar datos: " . mysqli_error($conexion) . "</p>";
                             }
-                        }
-                        render_pie_chart($datos, "👕 Camisetas por Equipo");
-                        ?>
-
-                        <?php
-                        // Pedidos por estado
-                        $sql = "SELECT e.nombre_estado as label, COUNT(p.id_pedido) as total 
-                                FROM estados_pedido e 
-                                LEFT JOIN pedidos p ON e.id_estado = p.id_estado 
-                                GROUP BY e.id_estado";
-                        $result = mysqli_query($conexion, $sql);
-                        $datos = [];
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            if ($row['total'] > 0) {
-                                $datos[] = $row;
-                            }
-                        }
-                        render_pie_chart($datos, "🛒 Pedidos por Estado");
-                        ?>
-                    </div>
-
-                    <!-- Productos destacados -->
-                    <div class="section">
-                        <h2>⭐ Camisetas Destacadas</h2>
-                        <?php
-                        $sql = "SELECT * FROM vista_productos_completa WHERE destacado = 1 LIMIT 10";
-                        $result = mysqli_query($conexion, $sql);
-                        $productos = [];
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            $productos[] = $row;
-                        }
-                        render_tabla_html($productos);
-                        ?>
+                            ?>
+                        </div>
                     </div>
 
                 <?php elseif ($vista_actual === 'buscar'): ?>
@@ -679,76 +651,124 @@ if ($logged_in) {
                     <!-- Script del buscador -->
                     <script src="buscador.js"></script>
 
-                <?php elseif ($tabla_actual): ?>
-                    <!-- VISTA DE TABLA -->
-                    <div class="table-section">
-                        <!-- Formulario de inserción -->
-                        <div class="insert-form">
-                            <h2>➕ Insertar Nuevo Registro</h2>
-                            <form method="POST" action="?tabla=<?= $tabla_actual ?>">
-                                <input type="hidden" name="accion" value="insertar">
-                                
-                                <div class="form-grid">
-                                    <?php
-$meta = obtener_meta_columnas($conexion, $tabla_actual, DB_NAME);
-                    $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
-                    $fks = obtener_claves_foraneas($conexion, $tabla_actual, DB_NAME);
-                                    
-                                    foreach ($meta as $nombre_col => $info_col) {
-                                        // Saltar PK auto_increment y timestamps automáticos
-                                        if ($nombre_col === $pk && strpos($info_col['EXTRA'], 'auto_increment') !== false) {
-                                            continue;
-                                        }
-                                        if (in_array($nombre_col, ['fecha_creacion', 'fecha_registro', 'fecha_pedido', 'fecha_resena'])) {
-                                            continue;
-                                        }
-                                        
-                                        echo "<div class='form-field'>";
-                                        
-                                        // Si es FK, mostrar select
-                                        if (isset($fks[$nombre_col])) {
-                                            $tabla_ref = $fks[$nombre_col]['tabla'];
-                                            $columna_ref = $fks[$nombre_col]['columna'];
-                                            
-                                            echo "<label>" . htmlspecialchars($nombre_col) . "</label>";
-                                            echo "<select name='" . $nombre_col . "'>";
-                                            echo "<option value=''>-- seleccionar --</option>";
-                                            
-                                            $sql_fk = "SELECT * FROM " . $tabla_ref;
-                                            $result_fk = mysqli_query($conexion, $sql_fk);
-                                            if ($result_fk) {
-                                                while ($row_fk = mysqli_fetch_assoc($result_fk)) {
-                                                    $texto = implode(" - ", array_slice($row_fk, 0, 3));
-                                                    echo "<option value='" . $row_fk[$columna_ref] . "'>" . htmlspecialchars($texto) . "</option>";
-                                                }
-                                            }
-                                            echo "</select>";
-                                        } else {
-                                            echo render_input_para_columna($nombre_col, $info_col);
-                                        }
-                                        
-                                        echo "</div>";
-                                    }
-                                    ?>
-                                </div>
-                                
-                                <button type="submit" class="btn-primary">💾 Guardar Registro</button>
-                            </form>
+                <?php else: ?>
+                    <!-- DASHBOARD -->
+                    <div class="dashboard-grid">
+                        <!-- Estadísticas generales -->
+                        <div class="stat-card">
+                            <div class="stat-icon">👕</div>
+                            <div class="stat-info">
+                                <h3>Total Productos</h3>
+                                <?php
+                                $result = mysqli_query($conexion, "SELECT COUNT(*) as total FROM productos");
+                                $total = mysqli_fetch_assoc($result)['total'];
+                                ?>
+                                <p class="stat-number"><?= $total ?></p>
+                            </div>
                         </div>
 
-                        <!-- Tabla de datos -->
-                        <div class="data-view">
-                            <h2>📋 Listado de Registros</h2>
-                            <?php
-                            $sql = "SELECT * FROM " . $tabla_actual . " LIMIT 100";
-                            $result = mysqli_query($conexion, $sql);
-                            $datos = [];
-                            while ($row = mysqli_fetch_assoc($result)) {
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-info">
+                                <h3>Total Clientes</h3>
+                                <?php
+                                $result = mysqli_query($conexion, "SELECT COUNT(*) as total FROM clientes");
+                                $total = mysqli_fetch_assoc($result)['total'];
+                                ?>
+                                <p class="stat-number"><?= $total ?></p>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">🛒</div>
+                            <div class="stat-info">
+                                <h3>Total Pedidos</h3>
+                                <?php
+                                $result = mysqli_query($conexion, "SELECT COUNT(*) as total FROM pedidos");
+                                $total = mysqli_fetch_assoc($result)['total'];
+                                ?>
+                                <p class="stat-number"><?= $total ?></p>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <h3>Ingresos Totales</h3>
+                                <?php
+                                $result = mysqli_query($conexion, "SELECT SUM(total) as total FROM pedidos");
+                                $total = mysqli_fetch_assoc($result)['total'] ?? 0;
+                                ?>
+                                <p class="stat-number"><?= number_format($total, 2) ?>€</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráficos -->
+                    <div class="charts-grid">
+                        <?php
+                        // Camisetas por equipo
+                        $sql = "SELECT e.nombre_equipo as label, COUNT(p.id_producto) as total 
+                                FROM equipos e 
+                                LEFT JOIN productos p ON e.id_equipo = p.id_equipo 
+                                GROUP BY e.id_equipo
+                                ORDER BY total DESC
+                                LIMIT 8";
+                        $result = mysqli_query($conexion, $sql);
+                        $datos = [];
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            if ($row['total'] > 0) {
                                 $datos[] = $row;
                             }
-                            render_tabla_html($datos);
-                            ?>
-                        </div>
+                        }
+                        render_pie_chart($datos, "👕 Camisetas por Equipo");
+                        ?>
+
+                        <?php
+                        // Pedidos por estado
+                        $sql = "SELECT e.nombre_estado as label, COUNT(p.id_pedido) as total 
+                                FROM estados_pedido e 
+                                LEFT JOIN pedidos p ON e.id_estado = p.id_estado 
+                                GROUP BY e.id_estado";
+                        $result = mysqli_query($conexion, $sql);
+                        $datos = [];
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            if ($row['total'] > 0) {
+                                $datos[] = $row;
+                            }
+                        }
+                        render_pie_chart($datos, "🛒 Pedidos por Estado");
+                        ?>
+                    </div>
+
+                    <!-- Productos destacados -->
+                    <div class="section">
+                        <h2>⭐ Camisetas Destacadas</h2>
+                        <?php
+                        // Verificar si la vista existe
+                        $check_vista = mysqli_query($conexion, "SHOW TABLES LIKE 'vista_productos_completa'");
+                        if (mysqli_num_rows($check_vista) > 0) {
+                            $sql = "SELECT * FROM vista_productos_completa WHERE destacado = 1 LIMIT 10";
+                        } else {
+                            // Fallback si la vista no existe
+                            $sql = "SELECT p.*, e.nombre_equipo, m.nombre_marca 
+                                    FROM productos p 
+                                    INNER JOIN equipos e ON p.id_equipo = e.id_equipo 
+                                    INNER JOIN marcas m ON p.id_marca = m.id_marca 
+                                    WHERE p.destacado = 1 
+                                    LIMIT 10";
+                        }
+                        $result = mysqli_query($conexion, $sql);
+                        if ($result) {
+                            $productos = [];
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                $productos[] = $row;
+                            }
+                            render_tabla_html($productos);
+                        } else {
+                            echo "<p class='no-data'>📭 No hay productos destacados</p>";
+                        }
+                        ?>
                     </div>
                 <?php endif; ?>
             </div>
