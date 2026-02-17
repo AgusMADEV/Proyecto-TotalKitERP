@@ -197,7 +197,7 @@ function render_input_para_columna($nombre_columna, $meta_columna, $valor_actual
  */
 function render_tabla_html($rows) {
     if (!$rows || count($rows) === 0) {
-        echo "<p class='no-data'>📭 No hay datos disponibles</p>";
+        echo "<p class='no-data'>No hay datos disponibles</p>";
         return;
     }
 
@@ -232,7 +232,7 @@ function render_pie_chart($segmentos, $titulo = "Gráfico") {
         $total += $s['total'];
     }
     if ($total <= 0) {
-        echo "<p class='no-data'>📊 Sin datos para el gráfico</p>";
+        echo "<p class='no-data'>Sin datos para el gráfico</p>";
         return;
     }
 
@@ -246,7 +246,8 @@ function render_pie_chart($segmentos, $titulo = "Gráfico") {
     echo "<circle class='donut-ring' cx='21' cy='21' r='15.915'></circle>";
 
     $index = 0;
-    $colores = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+    // Colores de la paleta personalizada que coinciden con el CSS
+    $colores = ['#6f8f72', '#f2a65a', '#99af9a', '#f6be8c', '#c4cfc5', '#f6d7be', '#BFC6C4', '#d87a68'];
     
     foreach ($segmentos as $s) {
         $valor = $s['total'];
@@ -338,7 +339,8 @@ if ($logged_in) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚽ TotalKit ERP - Sistema de Gestión</title>
+    <title>TotalKit ERP - Sistema de Gestión</title>
+    <link rel="icon" type="image/svg+xml" href="https://static.agusmadev.es/logos/logo-verde-blanco-invertido.svg" />
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
@@ -348,32 +350,36 @@ if ($logged_in) {
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
-                <div class="logo-circle">⚽</div>
+                <div class="logo-circle">
+                    <svg viewBox="0 0 48 48" width="48" height="48">
+                        <text x="50%" y="50%" font-size="20" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="central">TK</text>
+                    </svg>
+                </div>
                 <h1>TotalKit ERP</h1>
-                <p>Sistema de Gestión de Camisetas de Fútbol</p>
+                <p>Sistema de Gestión Empresarial</p>
             </div>
             
             <?php if ($login_error): ?>
-                <div class="error-message">⚠️ <?= htmlspecialchars($login_error) ?></div>
+                <div class="error-message"><?= htmlspecialchars($login_error) ?></div>
             <?php endif; ?>
             
             <form method="POST" action="">
                 <input type="hidden" name="accion" value="login">
                 
                 <div class="form-group">
-                    <label>👤 Usuario</label>
+                    <label>Usuario</label>
                     <input type="text" name="usuario" placeholder="Ingresa tu usuario" required autofocus>
                 </div>
                 
                 <div class="form-group">
-                    <label>🔒 Contraseña</label>
+                    <label>Contraseña</label>
                     <input type="password" name="contrasena" placeholder="Ingresa tu contraseña" required>
                 </div>
                 
                 <button type="submit" class="btn-primary">Iniciar Sesión</button>
                 
                 <div class="login-hint">
-                    💡 Usuario: <strong>admin</strong> / Contraseña: <strong>admin123</strong>
+                    Usuario: <strong>admin</strong> / Contraseña: <strong>admin123</strong>
                 </div>
             </form>
         </div>
@@ -385,30 +391,38 @@ if ($logged_in) {
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="logo-circle">⚽</div>
+                <div class="logo-circle">
+                    <svg viewBox="0 0 48 48" width="48" height="48">
+                        <text x="50%" y="50%" font-size="18" font-weight="600" fill="white" text-anchor="middle" dominant-baseline="central">TK</text>
+                    </svg>
+                </div>
                 <h2>TotalKit</h2>
-                <p class="user-info">👤 <?= htmlspecialchars($_SESSION['usuario']) ?></p>
+                <p class="user-info"><?= htmlspecialchars($_SESSION['usuario']) ?></p>
             </div>
 
             <nav class="sidebar-nav">
-                <h3>📊 Panel Principal</h3>
+                <h3>Panel Principal</h3>
                 <a href="?vista=dashboard" class="nav-item <?= $vista_actual === 'dashboard' ? 'active' : '' ?>">
-                    🏠 Dashboard
+                    Dashboard
                 </a>
                 <a href="?vista=buscar" class="nav-item <?= $vista_actual === 'buscar' ? 'active' : '' ?>">
-                    🔍 Buscar Productos
+                    Buscar Productos
                 </a>
 
-                <h3>📋 Gestión de Tablas</h3>
+                <h3>Gestión de Datos</h3>
                 <?php foreach ($tablas as $tabla): ?>
                     <a href="?tabla=<?= $tabla ?>" class="nav-item <?= $tabla_actual === $tabla ? 'active' : '' ?>">
-                        📄 <?= ucfirst(str_replace('_', ' ', $tabla)) ?>
+                        <?= ucfirst(str_replace('_', ' ', $tabla)) ?>
                     </a>
                 <?php endforeach; ?>
             </nav>
 
             <div class="sidebar-footer">
-                <a href="?logout" class="btn-logout">🚪 Cerrar Sesión</a>
+                <a href="?logout" class="btn-logout">Cerrar Sesión</a>
+                <div class="sidebar-copyright">
+                    <p>TotalKit ERP v1.0</p>
+                    <p>© 2026 TotalKit</p>
+                </div>
             </div>
         </aside>
 
@@ -417,11 +431,11 @@ if ($logged_in) {
             <header class="content-header">
                 <h1>
                     <?php if ($tabla_actual && $vista_actual !== 'dashboard' && $vista_actual !== 'buscar'): ?>
-                        📄 Gestión de <?= ucfirst(str_replace('_', ' ', $tabla_actual)) ?>
+                        Gestión de <?= ucfirst(str_replace('_', ' ', $tabla_actual)) ?>
                     <?php elseif ($vista_actual === 'buscar'): ?>
-                        🔍 Buscador de Productos
+                        Buscador de Productos
                     <?php else: ?>
-                        📊 Dashboard Principal
+                        Dashboard
                     <?php endif; ?>
                 </h1>
             </header>
@@ -432,7 +446,7 @@ if ($logged_in) {
                     <div class="table-section">
                         <!-- Formulario de inserción -->
                         <div class="insert-form">
-                            <h2>➕ Insertar Nuevo Registro</h2>
+                            <h2>Insertar Nuevo Registro</h2>
                             <form method="POST" action="?tabla=<?= $tabla_actual ?>">
                                 <input type="hidden" name="accion" value="insertar">
                                 
@@ -656,7 +670,7 @@ if ($logged_in) {
                     <div class="dashboard-grid">
                         <!-- Estadísticas generales -->
                         <div class="stat-card">
-                            <div class="stat-icon">👕</div>
+                            <div class="stat-icon">PR</div>
                             <div class="stat-info">
                                 <h3>Total Productos</h3>
                                 <?php
@@ -668,7 +682,7 @@ if ($logged_in) {
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">👥</div>
+                            <div class="stat-icon">CL</div>
                             <div class="stat-info">
                                 <h3>Total Clientes</h3>
                                 <?php
@@ -680,7 +694,7 @@ if ($logged_in) {
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">🛒</div>
+                            <div class="stat-icon">PD</div>
                             <div class="stat-info">
                                 <h3>Total Pedidos</h3>
                                 <?php
@@ -692,7 +706,7 @@ if ($logged_in) {
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">💰</div>
+                            <div class="stat-icon">€</div>
                             <div class="stat-info">
                                 <h3>Ingresos Totales</h3>
                                 <?php
@@ -721,7 +735,7 @@ if ($logged_in) {
                                 $datos[] = $row;
                             }
                         }
-                        render_pie_chart($datos, "👕 Camisetas por Equipo");
+                        render_pie_chart($datos, "Productos por Equipo");
                         ?>
 
                         <?php
@@ -737,13 +751,13 @@ if ($logged_in) {
                                 $datos[] = $row;
                             }
                         }
-                        render_pie_chart($datos, "🛒 Pedidos por Estado");
+                        render_pie_chart($datos, "Pedidos por Estado");
                         ?>
                     </div>
 
                     <!-- Productos destacados -->
                     <div class="section">
-                        <h2>⭐ Camisetas Destacadas</h2>
+                        <h2>Productos Destacados</h2>
                         <?php
                         // Verificar si la vista existe
                         $check_vista = mysqli_query($conexion, "SHOW TABLES LIKE 'vista_productos_completa'");
@@ -766,7 +780,7 @@ if ($logged_in) {
                             }
                             render_tabla_html($productos);
                         } else {
-                            echo "<p class='no-data'>📭 No hay productos destacados</p>";
+                            echo "<p class='no-data'>No hay productos destacados</p>";
                         }
                         ?>
                     </div>
