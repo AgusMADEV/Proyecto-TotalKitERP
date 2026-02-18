@@ -201,6 +201,15 @@ html, body {
     letter-spacing: 0.01em;
     text-transform: uppercase;
     font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-primary svg {
+    flex-shrink: 0;
 }
 
 .btn-primary:hover {
@@ -329,6 +338,47 @@ html, body {
     color: var(--text-white);
     font-weight: 500;
     border-left-color: var(--color-accent-light);
+}
+
+/* Wrapper para nav-item con botón de crear */
+.nav-item-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-item-wrapper .nav-item {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.btn-crear-sidebar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--color-accent);
+    color: var(--text-white);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all var(--transition-base);
+    flex-shrink: 0;
+}
+
+.btn-crear-sidebar svg {
+    display: block;
+}
+
+.btn-crear-sidebar:hover {
+    background-color: var(--color-accent-light);
+    transform: scale(1.1);
+}
+
+.nav-item-wrapper {
+    margin-bottom: var(--spacing-xs);
 }
 
 .sidebar-footer {
@@ -694,6 +744,50 @@ html, body {
     color: var(--text-primary);
 }
 
+/* Columna de acciones en tablas */
+.actions-column {
+    text-align: center;
+    white-space: nowrap;
+    width: 120px;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.375rem 0.625rem;
+    margin: 0 0.25rem;
+    font-size: 1.25rem;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.btn-action svg {
+    display: block;
+}
+
+.btn-action:hover {
+    transform: scale(1.15);
+}
+
+.btn-edit {
+    color: var(--color-primary);
+}
+
+.btn-edit:hover {
+    background-color: rgba(111, 143, 114, 0.1);
+}
+
+.btn-delete {
+    color: var(--color-danger);
+}
+
+.btn-delete:hover {
+    background-color: rgba(216, 122, 104, 0.1);
+}
+
 .no-data {
     text-align: center;
     padding: var(--spacing-2xl) var(--spacing-xl);
@@ -720,6 +814,102 @@ html, body {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-light);
     border-top: 3px solid var(--color-primary);
+}
+
+/* Header de formulario con botón cancelar */
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.form-header h2 svg {
+    flex-shrink: 0;
+}
+
+.btn-cancelar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all var(--transition-base);
+}
+
+.btn-cancelar svg {
+    flex-shrink: 0
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.data-header h2 svg {
+    flex-shrink: 0;
+    transition: all var(--transition-base);
+}
+
+.btn-cancelar:hover {
+    background-color: var(--color-danger);
+    color: var(--text-white);
+}
+
+/* Header de vista de datos */
+.data-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--border-light);
+}
+
+.data-header h2 {
+    margin: 0;
+}
+
+/* Mensajes del sistema */
+.mensaje-exito,
+.mensaje-error {
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-xl);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.mensaje-exito svg,
+.mensaje-error svg {
+    flex-shrink: 0;
+}
+
+.mensaje-exito {
+    background-color: rgba(111, 143, 114, 0.1);
+    color: var(--color-success);
+    border-left: 4px solid var(--color-success);
+}
+
+.mensaje-error {
+    background-color: rgba(216, 122, 104, 0.1);
+    color: var(--color-danger);
+    border-left: 4px solid var(--color-danger);
 }
 
 .insert-form h2,

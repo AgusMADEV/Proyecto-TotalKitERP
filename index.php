@@ -63,6 +63,11 @@ function svg_icon($type, $size = 20, $color = 'currentColor') {
         'globe' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',
         'shield' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>',
         'chevron-down' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+        'edit' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+        'trash' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>',
+        'plus' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+        'save' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>',
+        'file-text' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>',
     ];
     return $icons[$type] ?? '';
 }
@@ -218,9 +223,9 @@ function render_input_para_columna($nombre_columna, $meta_columna, $valor_actual
 }
 
 /**
- * Renderizar tabla HTML de resultados
+ * Renderizar tabla HTML de resultados con botones de acción
  */
-function render_tabla_html($rows) {
+function render_tabla_html($rows, $tabla_nombre = '', $pk_columna = '') {
     if (!$rows || count($rows) === 0) {
         echo "<p class='no-data'>No hay datos disponibles</p>";
         return;
@@ -233,6 +238,9 @@ function render_tabla_html($rows) {
     foreach ($first as $k => $_) {
         echo "<th>" . htmlspecialchars($k) . "</th>";
     }
+    if ($tabla_nombre && $pk_columna) {
+        echo "<th class='actions-column'>Acciones</th>";
+    }
     echo "</tr></thead>";
     echo "<tbody>";
 
@@ -240,6 +248,14 @@ function render_tabla_html($rows) {
         echo "<tr>";
         foreach ($fila as $valor) {
             echo "<td>" . htmlspecialchars($valor ?? '', ENT_QUOTES) . "</td>";
+        }
+        // Agregar botones de acción
+        if ($tabla_nombre && $pk_columna && isset($fila[$pk_columna])) {
+            $id_valor = $fila[$pk_columna];
+            echo "<td class='actions-column'>";
+            echo "<a href='?tabla=" . urlencode($tabla_nombre) . "&accion=editar&id=" . urlencode($id_valor) . "' class='btn-action btn-edit' title='Editar'>" . svg_icon('edit', 18) . "</a>";
+            echo "<a href='?tabla=" . urlencode($tabla_nombre) . "&accion=eliminar&id=" . urlencode($id_valor) . "' class='btn-action btn-delete' title='Eliminar' onclick='return confirm(\"¿Estás seguro de eliminar este registro?\");'>" . svg_icon('trash', 18) . "</a>";
+            echo "</td>";
         }
         echo "</tr>";
     }
@@ -319,8 +335,15 @@ function render_pie_chart($segmentos, $titulo = "Gráfico") {
 if ($logged_in) {
     $tabla_actual = $_GET['tabla'] ?? null;
     $vista_actual = $_GET['vista'] ?? ($tabla_actual ? 'tabla' : 'dashboard');
+    $accion = $_GET['accion'] ?? '';
+    $id_editar = $_GET['id'] ?? '';
+    $mensaje_sistema = '';
 
-    // Insertar nuevo registro
+    // =============================================
+    // PROCESAMIENTO DE ACCIONES CRUD
+    // =============================================
+
+    // INSERTAR nuevo registro
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'insertar' && $tabla_actual) {
         $campos = [];
         $valores = [];
@@ -331,16 +354,121 @@ if ($logged_in) {
         foreach ($_POST as $campo => $valor) {
             if ($campo !== 'accion' && $campo !== $pk && isset($meta[$campo])) {
                 $campos[] = $campo;
-                $valores[] = "'" . mysqli_real_escape_string($conexion, $valor) . "'";
+                if ($valor === '') {
+                    $valores[] = "NULL";
+                } else {
+                    $valores[] = "'" . mysqli_real_escape_string($conexion, $valor) . "'";
+                }
             }
         }
         
         if (count($campos) > 0) {
             $sql_insert = "INSERT INTO " . $tabla_actual . " (" . implode(", ", $campos) . ") VALUES (" . implode(", ", $valores) . ")";
-            if (mysqli_query($conexion, $sql_insert)) {
-                echo "<script>alert('Registro insertado correctamente');</script>";
+            
+            // Ejecutar con manejo de errores
+            $resultado = @mysqli_query($conexion, $sql_insert);
+            
+            if ($resultado) {
+                $mensaje_sistema = "<div class='mensaje-exito'>" . svg_icon('check', 16) . " Registro insertado correctamente</div>";
+                $accion = ''; // Limpiar acción
             } else {
-                echo "<script>alert('Error al insertar: " . mysqli_error($conexion) . "');</script>";
+                $error_num = mysqli_errno($conexion);
+                $error_msg = mysqli_error($conexion);
+                
+                // Mensajes de error más amigables
+                if ($error_num == 1062) { // Duplicate entry
+                    // Extraer el nombre del campo del mensaje de error
+                    if (preg_match("/for key '(.+?)'/", $error_msg, $matches)) {
+                        $campo = $matches[1];
+                        $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Ya existe un registro con ese valor en el campo '<strong>" . htmlspecialchars($campo) . "</strong>'. Por favor, usa un valor diferente.</div>";
+                    } else {
+                        $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Ya existe un registro con esos datos. Por favor, verifica los campos únicos.</div>";
+                    }
+                } elseif ($error_num == 1452) { // Foreign key constraint
+                    $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " El valor seleccionado no existe en la tabla relacionada. Por favor, selecciona un valor válido.</div>";
+                } elseif ($error_num == 1048) { // Column cannot be null
+                    $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Falta completar un campo obligatorio. Por favor, revisa el formulario.</div>";
+                } else {
+                    $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Error al insertar: " . htmlspecialchars($error_msg) . "</div>";
+                }
+            }
+        }
+    }
+
+    // ACTUALIZAR registro existente
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'actualizar' && $tabla_actual && isset($_POST['id'])) {
+        $sets = [];
+        
+        $meta = obtener_meta_columnas($conexion, $tabla_actual, DB_NAME);
+        $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
+        $id = mysqli_real_escape_string($conexion, $_POST['id']);
+        
+        foreach ($_POST as $campo => $valor) {
+            if ($campo !== 'accion' && $campo !== 'id' && $campo !== $pk && isset($meta[$campo])) {
+                if ($valor === '') {
+                    $sets[] = $campo . " = NULL";
+                } else {
+                    $sets[] = $campo . " = '" . mysqli_real_escape_string($conexion, $valor) . "'";
+                }
+            }
+        }
+        
+        if (count($sets) > 0) {
+            $sql_update = "UPDATE " . $tabla_actual . " SET " . implode(", ", $sets) . " WHERE " . $pk . " = '" . $id . "'";
+            
+            // Ejecutar con manejo de errores
+            $resultado = @mysqli_query($conexion, $sql_update);
+            
+            if ($resultado) {
+                $mensaje_sistema = "<div class='mensaje-exito'>" . svg_icon('check', 16) . " Registro actualizado correctamente</div>";
+                $accion = '';
+                $id_editar = '';
+            } else {
+                $error_num = mysqli_errno($conexion);
+                $error_msg = mysqli_error($conexion);
+                
+                // Mensajes de error más amigables
+                if ($error_num == 1062) { // Duplicate entry
+                    if (preg_match("/for key '(.+?)'/", $error_msg, $matches)) {
+                        $campo = $matches[1];
+                        $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Ya existe otro registro con ese valor en el campo '<strong>" . htmlspecialchars($campo) . "</strong>'. Por favor, usa un valor diferente.</div>";
+                    } else {
+                        $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Ya existe otro registro con esos datos. Por favor, verifica los campos únicos.</div>";
+                    }
+                } elseif ($error_num == 1452) { // Foreign key constraint
+                    $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " El valor seleccionado no existe en la tabla relacionada. Por favor, selecciona un valor válido.</div>";
+                } elseif ($error_num == 1048) { // Column cannot be null
+                    $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Falta completar un campo obligatorio. Por favor, revisa el formulario.</div>";
+                } else {
+                    $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Error al actualizar: " . htmlspecialchars($error_msg) . "</div>";
+                }
+            }
+        }
+    }
+
+    // ELIMINAR registro
+    if ($accion === 'eliminar' && $tabla_actual && $id_editar) {
+        $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
+        $id = mysqli_real_escape_string($conexion, $id_editar);
+        
+        $sql_delete = "DELETE FROM " . $tabla_actual . " WHERE " . $pk . " = '" . $id . "'";
+        
+        // Ejecutar con manejo de errores
+        $resultado = @mysqli_query($conexion, $sql_delete);
+        
+        if ($resultado) {
+            $mensaje_sistema = "<div class='mensaje-exito'>" . svg_icon('check', 16) . " Registro eliminado correctamente</div>";
+            $accion = '';
+            $id_editar = '';
+        } else {
+            $error_num = mysqli_errno($conexion);
+            $error_msg = mysqli_error($conexion);
+            
+            // Mensajes de error más amigables
+            if ($error_num == 1451) { // Foreign key constraint on delete
+                $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " No se puede eliminar este registro porque está siendo usado en otras tablas. Primero elimina los registros relacionados.</div>";
+            } else {
+                $mensaje_sistema = "<div class='mensaje-error'>" . svg_icon('x', 16) . " Error al eliminar: " . htmlspecialchars($error_msg) . "</div>";
             }
         }
     }
@@ -365,7 +493,7 @@ if ($logged_in) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TotalKit ERP - Sistema de Gestión</title>
-    <link rel="icon" type="image/svg+xml" href="https://static.agusmadev.es/logos/logo-verde-blanco-invertido.svg" />
+    <link rel="icon" type="image/png" href="https://static.agusmadev.es/logos/logo-blanco-verde-invertido.png" />
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
@@ -436,9 +564,14 @@ if ($logged_in) {
 
                 <h3>Gestión de Datos</h3>
                 <?php foreach ($tablas as $tabla): ?>
-                    <a href="?tabla=<?= $tabla ?>" class="nav-item <?= $tabla_actual === $tabla ? 'active' : '' ?>">
-                        <?= ucfirst(str_replace('_', ' ', $tabla)) ?>
-                    </a>
+                    <div class="nav-item-wrapper">
+                        <a href="?tabla=<?= $tabla ?>" class="nav-item <?= $tabla_actual === $tabla ? 'active' : '' ?>">
+                            <?= ucfirst(str_replace('_', ' ', $tabla)) ?>
+                        </a>
+                        <?php if ($tabla_actual === $tabla): ?>
+                            <a href="?tabla=<?= $tabla ?>&accion=crear" class="btn-crear-sidebar" title="Crear nuevo registro"><?= svg_icon('plus', 16) ?></a>
+                        <?php endif; ?>
+                    </div>
                 <?php endforeach; ?>
             </nav>
 
@@ -466,14 +599,21 @@ if ($logged_in) {
             </header>
 
             <div class="content-body">
+                <?php echo $mensaje_sistema; ?>
+                
                 <?php if ($tabla_actual && $vista_actual !== 'dashboard' && $vista_actual !== 'buscar'): ?>
                     <!-- VISTA DE TABLA -->
                     <div class="table-section">
-                        <!-- Formulario de inserción -->
-                        <div class="insert-form">
-                            <h2>Insertar Nuevo Registro</h2>
-                            <form method="POST" action="?tabla=<?= $tabla_actual ?>">
-                                <input type="hidden" name="accion" value="insertar">
+                        
+                        <?php if ($accion === 'crear'): ?>
+                            <!-- Formulario de CREACIÓN -->
+                            <div class="insert-form">
+                                <div class="form-header">
+                                    <h2><?= svg_icon('plus', 20) ?> Crear Nuevo Registro</h2>
+                                    <a href="?tabla=<?= $tabla_actual ?>" class="btn-cancelar"><?= svg_icon('x', 16) ?> Cancelar</a>
+                                </div>
+                                <form method="POST" action="?tabla=<?= $tabla_actual ?>">
+                                    <input type="hidden" name="accion" value="insertar">
                                 
                                 <div class="form-grid">
                                     <?php
@@ -519,27 +659,110 @@ if ($logged_in) {
                                     ?>
                                 </div>
                                 
-                                <button type="submit" class="btn-primary">Guardar Registro</button>
-                            </form>
-                        </div>
-
-                        <!-- Tabla de datos -->
-                        <div class="data-view">
-                            <h2>Listado de Registros</h2>
+                                    <button type="submit" class="btn-primary"><?= svg_icon('save', 18) ?> Guardar Registro</button>
+                                </form>
+                            </div>
+                        
+                        <?php elseif ($accion === 'editar' && $id_editar): ?>
+                            <!-- Formulario de EDICIÓN -->
                             <?php
-                            $sql = "SELECT * FROM " . $tabla_actual . " LIMIT 100";
-                            $result = mysqli_query($conexion, $sql);
-                            if ($result) {
-                                $datos = [];
-                                while ($row = mysqli_fetch_assoc($result)) {
-                                    $datos[] = $row;
-                                }
-                                render_tabla_html($datos);
-                            } else {
-                                echo "<p class='no-data'>" . svg_icon('x', 16) . " Error al cargar datos: " . mysqli_error($conexion) . "</p>";
-                            }
+                            $meta = obtener_meta_columnas($conexion, $tabla_actual, DB_NAME);
+                            $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
+                            $fks = obtener_claves_foraneas($conexion, $tabla_actual, DB_NAME);
+                            
+                            // Obtener datos del registro
+                            $sql_edit = "SELECT * FROM " . $tabla_actual . " WHERE " . $pk . " = '" . mysqli_real_escape_string($conexion, $id_editar) . "' LIMIT 1";
+                            $result_edit = mysqli_query($conexion, $sql_edit);
+                            $registro = mysqli_fetch_assoc($result_edit);
+                            
+                            if ($registro):
                             ?>
-                        </div>
+                            <div class="insert-form">
+                                <div class="form-header">
+                                    <h2><?= svg_icon('edit', 20) ?> Editar Registro</h2>
+                                    <a href="?tabla=<?= $tabla_actual ?>" class="btn-cancelar"><?= svg_icon('x', 16) ?> Cancelar</a>
+                                </div>
+                                <form method="POST" action="?tabla=<?= $tabla_actual ?>">
+                                    <input type="hidden" name="accion" value="actualizar">
+                                    <input type="hidden" name="id" value="<?= htmlspecialchars($id_editar) ?>">
+                                    
+                                    <div class="form-grid">
+                                        <?php
+                                        foreach ($meta as $nombre_col => $info_col) {
+                                            // Mostrar PK como solo lectura
+                                            if ($nombre_col === $pk) {
+                                                echo "<div class='form-field'>";
+                                                echo "<label>" . htmlspecialchars($nombre_col) . " (ID)</label>";
+                                                echo "<input type='text' value='" . htmlspecialchars($registro[$nombre_col]) . "' disabled style='background: #e8e2d8;'>";
+                                                echo "</div>";
+                                                continue;
+                                            }
+                                            
+                                            // Saltar timestamps automáticos
+                                            if (in_array($nombre_col, ['fecha_creacion', 'fecha_registro', 'fecha_pedido', 'fecha_resena'])) {
+                                                continue;
+                                            }
+                                            
+                                            echo "<div class='form-field'>";
+                                            
+                                            // Si es FK, mostrar select
+                                            if (isset($fks[$nombre_col])) {
+                                                $tabla_ref = $fks[$nombre_col]['tabla'];
+                                                $columna_ref = $fks[$nombre_col]['columna'];
+                                                $valor_actual = $registro[$nombre_col] ?? '';
+                                                
+                                                echo "<label>" . htmlspecialchars($nombre_col) . "</label>";
+                                                echo "<select name='" . $nombre_col . "'>";
+                                                echo "<option value=''>-- seleccionar --</option>";
+                                                
+                                                $sql_fk = "SELECT * FROM " . $tabla_ref;
+                                                $result_fk = mysqli_query($conexion, $sql_fk);
+                                                if ($result_fk) {
+                                                    while ($row_fk = mysqli_fetch_assoc($result_fk)) {
+                                                        $texto = implode(" - ", array_slice($row_fk, 0, 3));
+                                                        $selected = ($row_fk[$columna_ref] == $valor_actual) ? 'selected' : '';
+                                                        echo "<option value='" . htmlspecialchars($row_fk[$columna_ref]) . "' " . $selected . ">" . htmlspecialchars($texto) . "</option>";
+                                                    }
+                                                }
+                                                echo "</select>";
+                                            } else {
+                                                echo render_input_para_columna($nombre_col, $info_col, $registro[$nombre_col] ?? '');
+                                            }
+                                            
+                                            echo "</div>";
+                                        }
+                                        ?>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn-primary"><?= svg_icon('save', 18) ?> Guardar Registro</button>
+                                </form>
+                            </div>
+                            <?php else: ?>
+                                <p class='no-data'><?= svg_icon('x', 16) ?> Registro no encontrado</p>
+                            <?php endif; ?>
+                        
+                        <?php else: ?>
+                            <!-- Tabla de datos -->
+                            <div class="data-view">
+                                <div class="data-header">
+                                    <h2><?= svg_icon('file-text', 20) ?> Listado de Registros</h2>
+                                </div>
+                                <?php
+                                $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
+                                $sql = "SELECT * FROM " . $tabla_actual . " LIMIT 100";
+                                $result = mysqli_query($conexion, $sql);
+                                if ($result) {
+                                    $datos = [];
+                                    while ($row = mysqli_fetch_assoc($result)) {
+                                        $datos[] = $row;
+                                    }
+                                    render_tabla_html($datos, $tabla_actual, $pk);
+                                } else {
+                                    echo "<p class='no-data'>" . svg_icon('x', 16) . " Error al cargar datos: " . mysqli_error($conexion) . "</p>";
+                                }
+                                ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                 <?php elseif ($vista_actual === 'buscar'): ?>
