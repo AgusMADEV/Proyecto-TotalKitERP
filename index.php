@@ -225,10 +225,16 @@ function render_input_para_columna($nombre_columna, $meta_columna, $valor_actual
 /**
  * Renderizar tabla HTML de resultados con botones de acción
  */
-function render_tabla_html($rows, $tabla_nombre = '', $pk_columna = '') {
+function render_tabla_html($rows, $tabla_nombre = '', $pk_columna = '', $conexion = null, $bd = DB_NAME) {
     if (!$rows || count($rows) === 0) {
         echo "<p class='no-data'>No hay datos disponibles</p>";
         return;
+    }
+
+    // Obtener claves foráneas si hay conexión y tabla
+    $foreignKeys = [];
+    if ($conexion && $tabla_nombre) {
+        $foreignKeys = obtener_claves_foraneas($conexion, $tabla_nombre, $bd);
     }
 
     echo "<div class='table-wrapper'>";
@@ -246,8 +252,29 @@ function render_tabla_html($rows, $tabla_nombre = '', $pk_columna = '') {
 
     foreach ($rows as $fila) {
         echo "<tr>";
-        foreach ($fila as $valor) {
-            echo "<td>" . htmlspecialchars($valor ?? '', ENT_QUOTES) . "</td>";
+        foreach ($fila as $clave => $valor) {
+            // Expandir claves foráneas si es FK y hay conexión
+            if ($conexion && isset($foreignKeys[$clave]) && $valor !== null && $valor !== '') {
+                $fk = $foreignKeys[$clave];
+                $tabla_fk = $fk['tabla'];
+                $columna_fk = $fk['columna'];
+
+                $sql_fk = "SELECT * FROM " . $tabla_fk . " WHERE " . $columna_fk . " = '" . mysqli_real_escape_string($conexion, $valor) . "' LIMIT 1";
+                $res_fk = mysqli_query($conexion, $sql_fk);
+                
+                if ($res_fk && $fila_fk = mysqli_fetch_assoc($res_fk)) {
+                    $partes = [];
+                    foreach ($fila_fk as $k2 => $v2) {
+                        $partes[] = $v2;
+                    }
+                    $texto_celda = implode(" | ", $partes);
+                    echo "<td>" . htmlspecialchars($texto_celda, ENT_QUOTES) . "</td>";
+                } else {
+                    echo "<td>" . htmlspecialchars($valor ?? '', ENT_QUOTES) . "</td>";
+                }
+            } else {
+                echo "<td>" . htmlspecialchars($valor ?? '', ENT_QUOTES) . "</td>";
+            }
         }
         // Agregar botones de acción
         if ($tabla_nombre && $pk_columna && isset($fila[$pk_columna])) {
@@ -756,7 +783,7 @@ if ($logged_in) {
                                     while ($row = mysqli_fetch_assoc($result)) {
                                         $datos[] = $row;
                                     }
-                                    render_tabla_html($datos, $tabla_actual, $pk);
+                                    render_tabla_html($datos, $tabla_actual, $pk, $conexion, DB_NAME);
                                 } else {
                                     echo "<p class='no-data'>" . svg_icon('x', 16) . " Error al cargar datos: " . mysqli_error($conexion) . "</p>";
                                 }
