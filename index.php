@@ -69,6 +69,8 @@ function svg_icon($type, $size = 20, $color = 'currentColor') {
         'save' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>',
         'file-text' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>',
         'info' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+        'list' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
+        'grid' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
     ];
     return $icons[$type] ?? '';
 }
@@ -314,6 +316,77 @@ function render_tabla_html($rows, $tabla_nombre = '', $pk_columna = '', $conexio
     }
 
     echo "</tbody></table>";
+    echo "</div>";
+}
+
+/**
+ * Renderizar tarjetas HTML de resultados con botones de acción
+ */
+function render_tarjetas_html($rows, $tabla_nombre = '', $pk_columna = '', $conexion = null, $bd = DB_NAME) {
+    if (!$rows || count($rows) === 0) {
+        echo "<p class='no-data'>No hay datos disponibles</p>";
+        return;
+    }
+
+    // Obtener claves foráneas si hay conexión y tabla
+    $foreignKeys = [];
+    if ($conexion && $tabla_nombre) {
+        $foreignKeys = obtener_claves_foraneas($conexion, $tabla_nombre, $bd);
+    }
+
+    echo "<div class='cards-grid'>";
+
+    foreach ($rows as $fila) {
+        echo "<div class='data-card'>";
+        echo "<div class='card-body'>";
+        
+        foreach ($fila as $clave => $valor) {
+            echo "<div class='card-field'>";
+            echo "<span class='field-label'>" . htmlspecialchars($clave) . ":</span>";
+            echo "<span class='field-value'>";
+            
+            // Expandir claves foráneas si es FK y hay conexión
+            if ($conexion && isset($foreignKeys[$clave]) && $valor !== null && $valor !== '') {
+                $fk = $foreignKeys[$clave];
+                $tabla_fk = $fk['tabla'];
+                $columna_fk = $fk['columna'];
+
+                $sql_fk = "SELECT * FROM " . $tabla_fk . " WHERE " . $columna_fk . " = '" . mysqli_real_escape_string($conexion, $valor) . "' LIMIT 1";
+                $res_fk = mysqli_query($conexion, $sql_fk);
+                
+                if ($res_fk && $fila_fk = mysqli_fetch_assoc($res_fk)) {
+                    $partes = [];
+                    foreach ($fila_fk as $k2 => $v2) {
+                        $partes[] = $v2;
+                    }
+                    $texto_celda = implode(" | ", $partes);
+                    echo htmlspecialchars($texto_celda, ENT_QUOTES);
+                } else {
+                    echo htmlspecialchars($valor ?? '', ENT_QUOTES);
+                }
+            } else {
+                echo htmlspecialchars($valor ?? '', ENT_QUOTES);
+            }
+            
+            echo "</span>";
+            echo "</div>";
+        }
+        
+        echo "</div>";
+        
+        // Agregar botones de acción
+        if ($tabla_nombre && $pk_columna && isset($fila[$pk_columna])) {
+            $id_valor = $fila[$pk_columna];
+            echo "<div class='card-actions'>";
+            echo "<a href='?tabla=" . urlencode($tabla_nombre) . "&accion=reporte&id=" . urlencode($id_valor) . "' class='btn-action btn-report' title='Reporte'>" . svg_icon('info', 18) . " Reporte</a>";
+            echo "<a href='?tabla=" . urlencode($tabla_nombre) . "&accion=editar&id=" . urlencode($id_valor) . "' class='btn-action btn-edit' title='Editar'>" . svg_icon('edit', 18) . " Editar</a>";
+            echo "<a href='?tabla=" . urlencode($tabla_nombre) . "&accion=eliminar&id=" . urlencode($id_valor) . "' class='btn-action btn-delete' title='Eliminar' onclick='return confirm(\"¿Estás seguro de eliminar este registro?\");'>" . svg_icon('trash', 18) . " Eliminar</a>";
+            echo "</div>";
+        }
+        
+        echo "</div>";
+    }
+
     echo "</div>";
 }
 
@@ -882,9 +955,20 @@ if ($logged_in) {
                         
                         <?php else: ?>
                             <!-- Tabla de datos -->
+                            <?php
+                            $vista_datos = isset($_GET['vista']) ? $_GET['vista'] : 'tabla';
+                            ?>
                             <div class="data-view">
                                 <div class="data-header">
                                     <h2><?= svg_icon('file-text', 20) ?> Listado de Registros</h2>
+                                    <div class="vista-botones">
+                                        <a href="?tabla=<?= $tabla_actual ?>&vista=tabla" class="btn-vista <?= $vista_datos === 'tabla' ? 'active' : '' ?>" title="Vista de Tabla">
+                                            <?= svg_icon('list', 18) ?> Tabla
+                                        </a>
+                                        <a href="?tabla=<?= $tabla_actual ?>&vista=tarjetas" class="btn-vista <?= $vista_datos === 'tarjetas' ? 'active' : '' ?>" title="Vista de Tarjetas">
+                                            <?= svg_icon('grid', 18) ?> Tarjetas
+                                        </a>
+                                    </div>
                                 </div>
                                 <?php
                                 $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
@@ -895,7 +979,11 @@ if ($logged_in) {
                                     while ($row = mysqli_fetch_assoc($result)) {
                                         $datos[] = $row;
                                     }
-                                    render_tabla_html($datos, $tabla_actual, $pk, $conexion, DB_NAME);
+                                    if ($vista_datos === 'tarjetas') {
+                                        render_tarjetas_html($datos, $tabla_actual, $pk, $conexion, DB_NAME);
+                                    } else {
+                                        render_tabla_html($datos, $tabla_actual, $pk, $conexion, DB_NAME);
+                                    }
                                 } else {
                                     echo "<p class='no-data'>" . svg_icon('x', 16) . " Error al cargar datos: " . mysqli_error($conexion) . "</p>";
                                 }
