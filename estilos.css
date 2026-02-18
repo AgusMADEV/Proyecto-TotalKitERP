@@ -445,6 +445,11 @@ html, body {
     letter-spacing: -0.02em;
 }
 
+.stat-card .stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
 .stat-card:nth-child(2) {
     border-top-color: var(--color-accent);
 }
@@ -819,6 +824,42 @@ html, body {
 }
 
 /* =============================================
+   ICONOS SVG
+   ============================================= */
+svg {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.stat-icon svg,
+.detalle-item svg,
+.badge-destacado svg,
+.badge-tipo svg,
+.producto-jugador svg,
+.no-results-icon svg {
+    margin-right: 0.25rem;
+}
+
+.stat-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.no-results-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.3;
+}
+
+.no-results-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+/* =============================================
    SCROLLBAR PERSONALIZADO
    ============================================= */
 ::-webkit-scrollbar {
@@ -900,12 +941,16 @@ html, body {
 }
 
 .search-input-wrapper::before {
-    content: '🔍';
+    content: '';
     position: absolute;
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 1.25rem;
+    width: 20px;
+    height: 20px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%236f8f72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
     pointer-events: none;
 }
 
@@ -967,8 +1012,20 @@ html, body {
     display: none;
 }
 
-.filtros-toggle span {
+.filtros-toggle .toggle-icon {
     transition: transform var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+}
+
+.filtros-toggle .toggle-icon.rotated {
+    transform: rotate(180deg);
+}
+
+.filtros-toggle .toggle-icon svg {
+    color: var(--text-secondary);
+    width: 16px;
+    height: 16px;
 }
 
 .filtros-grid {
@@ -1097,6 +1154,14 @@ html, body {
     cursor: pointer;
     transition: all var(--transition-base);
     font-size: 1.125rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-view svg {
+    width: 16px;
+    height: 16px;
 }
 
 .btn-view:hover {
@@ -1148,6 +1213,14 @@ html, body {
 
 .stat-item .stat-icon {
     font-size: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    color: var(--bg-main);
+}
+
+.stat-item .stat-icon svg {
+    width: 20px;
+    height: 20px;
 }
 
 .stat-item .stat-label {
@@ -1225,6 +1298,14 @@ html, body {
     font-size: 0.6875rem;
     font-weight: 600;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.badge-destacado svg {
+    width: 12px;
+    height: 12px;
 }
 
 .badge-tipo {
@@ -1235,6 +1316,14 @@ html, body {
     font-size: 0.6875rem;
     font-weight: 600;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.badge-tipo svg {
+    width: 12px;
+    height: 12px;
 }
 
 .producto-body {
@@ -1268,6 +1357,14 @@ html, body {
     color: var(--color-primary);
     margin-bottom: var(--spacing-sm);
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.producto-jugador svg {
+    width: 14px;
+    height: 14px;
 }
 
 .producto-detalles {
@@ -1283,6 +1380,15 @@ html, body {
     background-color: var(--bg-secondary);
     padding: 0.25rem 0.5rem;
     border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.detalle-item svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0.7;
 }
 
 .producto-marca {
@@ -1403,12 +1509,16 @@ mark {
 .error-search p {
     font-size: 1rem;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
-.no-results-icon {
-    font-size: 4rem;
-    margin-bottom: var(--spacing-md);
-    opacity: 0.5;
+.error-search p svg {
+    color: var(--color-danger);
+    width: 16px;
+    height: 16px;
 }
 
 .no-results h3 {

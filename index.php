@@ -43,6 +43,31 @@ if ($logged_in) {
 }
 
 // =============================================
+// FUNCIONES DE ICONOS SVG
+// =============================================
+
+/**
+ * Generar icono SVG simple
+ */
+function svg_icon($type, $size = 20, $color = 'currentColor') {
+    $icons = [
+        'check' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+        'x' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+        'search' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>',
+        'box' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>',
+        'user' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+        'chart' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>',
+        'dollar' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
+        'tag' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>',
+        'star' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="' . $color . '" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+        'globe' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',
+        'shield' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>',
+        'chevron-down' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+    ];
+    return $icons[$type] ?? '';
+}
+
+// =============================================
 // FUNCIONES AUXILIARES
 // =============================================
 
@@ -313,9 +338,9 @@ if ($logged_in) {
         if (count($campos) > 0) {
             $sql_insert = "INSERT INTO " . $tabla_actual . " (" . implode(", ", $campos) . ") VALUES (" . implode(", ", $valores) . ")";
             if (mysqli_query($conexion, $sql_insert)) {
-                echo "<script>alert('✅ Registro insertado correctamente');</script>";
+                echo "<script>alert('Registro insertado correctamente');</script>";
             } else {
-                echo "<script>alert('❌ Error al insertar: " . mysqli_error($conexion) . "');</script>";
+                echo "<script>alert('Error al insertar: " . mysqli_error($conexion) . "');</script>";
             }
         }
     }
@@ -494,13 +519,13 @@ if ($logged_in) {
                                     ?>
                                 </div>
                                 
-                                <button type="submit" class="btn-primary">💾 Guardar Registro</button>
+                                <button type="submit" class="btn-primary">Guardar Registro</button>
                             </form>
                         </div>
 
                         <!-- Tabla de datos -->
                         <div class="data-view">
-                            <h2>📋 Listado de Registros</h2>
+                            <h2>Listado de Registros</h2>
                             <?php
                             $sql = "SELECT * FROM " . $tabla_actual . " LIMIT 100";
                             $result = mysqli_query($conexion, $sql);
@@ -511,7 +536,7 @@ if ($logged_in) {
                                 }
                                 render_tabla_html($datos);
                             } else {
-                                echo "<p class='no-data'>❌ Error al cargar datos: " . mysqli_error($conexion) . "</p>";
+                                echo "<p class='no-data'>" . svg_icon('x', 16) . " Error al cargar datos: " . mysqli_error($conexion) . "</p>";
                             }
                             ?>
                         </div>
@@ -521,60 +546,64 @@ if ($logged_in) {
                     <!-- BUSCADOR DE PRODUCTOS -->
                     <div class="search-container">
                         <div class="search-header">
-                            <h2>🔍 Búsqueda Avanzada de Productos</h2>
+                            <h2>Búsqueda Avanzada de Productos</h2>
                             <div class="search-bar">
                                 <div class="search-input-wrapper">
                                     <input type="text" id="busqueda-texto" placeholder="Buscar por nombre, equipo, marca, jugador...">
                                 </div>
-                                <button class="btn-limpiar" id="btn-limpiar-filtros">🧹 Limpiar Filtros</button>
+                                <button class="btn-limpiar" id="btn-limpiar-filtros">Limpiar Filtros</button>
                             </div>
                         </div>
 
                         <div class="filtros-container">
-                            <div class="filtros-toggle" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                                <h3>⚙️ Filtros Avanzados</h3>
-                                <span>▼</span>
+                            <div class="filtros-toggle" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.toggle-icon').classList.toggle('rotated')">
+                                <h3>Filtros Avanzados</h3>
+                                <span class="toggle-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </span>
                             </div>
                             
                             <div class="filtros-content">
                                 <div class="filtros-grid">
                                     <div class="filtro-grupo">
-                                        <label>⚽ Equipo</label>
+                                        <label>Equipo</label>
                                         <select id="filtro-equipo">
                                             <option value="">Todos los equipos</option>
                                         </select>
                                     </div>
 
                                     <div class="filtro-grupo">
-                                        <label>🏆 Liga</label>
+                                        <label>Liga</label>
                                         <select id="filtro-liga">
                                             <option value="">Todas las ligas</option>
                                         </select>
                                     </div>
 
                                     <div class="filtro-grupo">
-                                        <label>🏷️ Marca</label>
+                                        <label>Marca</label>
                                         <select id="filtro-marca">
                                             <option value="">Todas las marcas</option>
                                         </select>
                                     </div>
 
                                     <div class="filtro-grupo">
-                                        <label>📅 Temporada</label>
+                                        <label>Temporada</label>
                                         <select id="filtro-temporada">
                                             <option value="">Todas las temporadas</option>
                                         </select>
                                     </div>
 
                                     <div class="filtro-grupo">
-                                        <label>👕 Tipo de Camiseta</label>
+                                        <label>Tipo de Camiseta</label>
                                         <select id="filtro-tipo">
                                             <option value="">Todos los tipos</option>
                                         </select>
                                     </div>
 
                                     <div class="filtro-grupo">
-                                        <label>📏 Talla</label>
+                                        <label>Talla</label>
                                         <select id="filtro-talla">
                                             <option value="">Todas las tallas</option>
                                         </select>
@@ -583,7 +612,7 @@ if ($logged_in) {
 
                                 <div class="filtros-grid" style="margin-top: 1rem;">
                                     <div class="filtro-grupo">
-                                        <label>💰 Rango de Precio</label>
+                                        <label>Rango de Precio</label>
                                         <div class="precio-range">
                                             <input type="number" id="filtro-precio-min" placeholder="Mínimo" step="0.01" min="0">
                                             <input type="number" id="filtro-precio-max" placeholder="Máximo" step="0.01" min="0">
@@ -591,7 +620,7 @@ if ($logged_in) {
                                     </div>
 
                                     <div class="filtro-grupo">
-                                        <label>🎯 Tipo de Equipo</label>
+                                        <label>Tipo de Equipo</label>
                                         <div class="radio-group">
                                             <div class="radio-item">
                                                 <input type="radio" id="radio-todos-equipos" name="tipo-equipo" value="" checked>
@@ -599,11 +628,11 @@ if ($logged_in) {
                                             </div>
                                             <div class="radio-item">
                                                 <input type="radio" id="radio-clubes" name="tipo-equipo" value="0">
-                                                <label for="radio-clubes">⚽ Clubes</label>
+                                                <label for="radio-clubes">Clubes</label>
                                             </div>
                                             <div class="radio-item">
                                                 <input type="radio" id="radio-selecciones" name="tipo-equipo" value="1">
-                                                <label for="radio-selecciones">🌍 Selecciones</label>
+                                                <label for="radio-selecciones">Selecciones</label>
                                             </div>
                                         </div>
                                     </div>
@@ -612,11 +641,11 @@ if ($logged_in) {
                                 <div class="filtros-checks">
                                     <div class="check-item">
                                         <input type="checkbox" id="filtro-solo-stock">
-                                        <label for="filtro-solo-stock">📦 Solo con stock disponible</label>
+                                        <label for="filtro-solo-stock">Solo con stock disponible</label>
                                     </div>
                                     <div class="check-item">
                                         <input type="checkbox" id="filtro-destacados">
-                                        <label for="filtro-destacados">⭐ Solo productos destacados</label>
+                                        <label for="filtro-destacados">Solo productos destacados</label>
                                     </div>
                                 </div>
                             </div>
@@ -628,10 +657,10 @@ if ($logged_in) {
                         <div class="search-controls">
                             <div class="view-controls">
                                 <button class="btn-view active" id="btn-vista-grid" title="Vista en cuadrícula">
-                                    ▦
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                                 </button>
                                 <button class="btn-view" id="btn-vista-lista" title="Vista en lista">
-                                    ☰
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                                 </button>
                             </div>
 
@@ -670,7 +699,7 @@ if ($logged_in) {
                     <div class="dashboard-grid">
                         <!-- Estadísticas generales -->
                         <div class="stat-card">
-                            <div class="stat-icon">PR</div>
+                            <div class="stat-icon"><?= svg_icon('box') ?></div>
                             <div class="stat-info">
                                 <h3>Total Productos</h3>
                                 <?php
@@ -682,7 +711,7 @@ if ($logged_in) {
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">CL</div>
+                            <div class="stat-icon"><?= svg_icon('user') ?></div>
                             <div class="stat-info">
                                 <h3>Total Clientes</h3>
                                 <?php
@@ -694,7 +723,7 @@ if ($logged_in) {
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">PD</div>
+                            <div class="stat-icon"><?= svg_icon('chart') ?></div>
                             <div class="stat-info">
                                 <h3>Total Pedidos</h3>
                                 <?php
@@ -706,7 +735,7 @@ if ($logged_in) {
                         </div>
 
                         <div class="stat-card">
-                            <div class="stat-icon">€</div>
+                            <div class="stat-icon"><?= svg_icon('dollar') ?></div>
                             <div class="stat-info">
                                 <h3>Ingresos Totales</h3>
                                 <?php
