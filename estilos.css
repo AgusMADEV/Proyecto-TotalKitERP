@@ -788,6 +788,14 @@ html, body {
     background-color: rgba(216, 122, 104, 0.1);
 }
 
+.btn-report {
+    color: #2563eb; /* Azul oscuro */
+}
+
+.btn-report:hover {
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
 .no-data {
     text-align: center;
     padding: var(--spacing-2xl) var(--spacing-xl);
@@ -807,13 +815,60 @@ html, body {
 }
 
 .insert-form,
-.data-view {
+.data-view,
+.reporte-container {
     background-color: var(--bg-card);
     padding: var(--spacing-2xl);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-light);
     border-top: 3px solid var(--color-primary);
+}
+
+/* Estilos específicos del reporte */
+.reporte-container {
+    border-top-color: #2563eb; /* Azul oscuro */
+}
+
+.reporte-seccion {
+    margin-bottom: var(--spacing-2xl);
+    padding-bottom: var(--spacing-2xl);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.reporte-seccion:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.reporte-seccion h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    font-weight: 600;
+}
+
+.reporte-item {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border-left: 3px solid #2563eb;
+}
+
+.reporte-item:last-child {
+    margin-bottom: 0;
+}
+
+.reporte-item h4 {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    font-weight: 600;
 }
 
 /* Header de formulario con botón cancelar */

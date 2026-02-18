@@ -68,6 +68,7 @@ function svg_icon($type, $size = 20, $color = 'currentColor') {
         'plus' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
         'save' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>',
         'file-text' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>',
+        'info' => '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
     ];
     return $icons[$type] ?? '';
 }
@@ -98,6 +99,30 @@ function obtener_claves_foraneas($conexion, $tabla, $bd = DB_NAME) {
         }
     }
     return $fk;
+}
+
+/**
+ * Obtener claves foráneas entrantes (tablas que apuntan a esta tabla)
+ */
+function obtener_claves_foraneas_entrantes($conexion, $tabla, $bd = DB_NAME) {
+    $fk_entrantes = [];
+    $sql = "
+        SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_COLUMN_NAME
+        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = '" . mysqli_real_escape_string($conexion, $bd) . "'
+          AND REFERENCED_TABLE_NAME = '" . mysqli_real_escape_string($conexion, $tabla) . "'
+    ";
+    $resultado = mysqli_query($conexion, $sql);
+    if ($resultado) {
+        while ($fila = mysqli_fetch_assoc($resultado)) {
+            $fk_entrantes[] = [
+                'tabla' => $fila['TABLE_NAME'],
+                'columna' => $fila['COLUMN_NAME'],
+                'columna_referenciada' => $fila['REFERENCED_COLUMN_NAME']
+            ];
+        }
+    }
+    return $fk_entrantes;
 }
 
 /**
@@ -280,6 +305,7 @@ function render_tabla_html($rows, $tabla_nombre = '', $pk_columna = '', $conexio
         if ($tabla_nombre && $pk_columna && isset($fila[$pk_columna])) {
             $id_valor = $fila[$pk_columna];
             echo "<td class='actions-column'>";
+            echo "<a href='?tabla=" . urlencode($tabla_nombre) . "&accion=reporte&id=" . urlencode($id_valor) . "' class='btn-action btn-report' title='Reporte'>" . svg_icon('info', 18) . "</a>";
             echo "<a href='?tabla=" . urlencode($tabla_nombre) . "&accion=editar&id=" . urlencode($id_valor) . "' class='btn-action btn-edit' title='Editar'>" . svg_icon('edit', 18) . "</a>";
             echo "<a href='?tabla=" . urlencode($tabla_nombre) . "&accion=eliminar&id=" . urlencode($id_valor) . "' class='btn-action btn-delete' title='Eliminar' onclick='return confirm(\"¿Estás seguro de eliminar este registro?\");'>" . svg_icon('trash', 18) . "</a>";
             echo "</td>";
@@ -763,6 +789,92 @@ if ($logged_in) {
                                     
                                     <button type="submit" class="btn-primary"><?= svg_icon('save', 18) ?> Guardar Registro</button>
                                 </form>
+                            </div>
+                            <?php else: ?>
+                                <p class='no-data'><?= svg_icon('x', 16) ?> Registro no encontrado</p>
+                            <?php endif; ?>
+                        
+                        <?php elseif ($accion === 'reporte' && $id_editar): ?>
+                            <!-- REPORTE DE RELACIONES -->
+                            <?php
+                            $pk = obtener_pk_columna($conexion, $tabla_actual, DB_NAME);
+                            
+                            // Obtener datos del registro
+                            $sql_registro = "SELECT * FROM " . $tabla_actual . " WHERE " . $pk . " = '" . mysqli_real_escape_string($conexion, $id_editar) . "' LIMIT 1";
+                            $result_registro = mysqli_query($conexion, $sql_registro);
+                            $registro = mysqli_fetch_assoc($result_registro);
+                            
+                            if ($registro):
+                                $fks_salientes = obtener_claves_foraneas($conexion, $tabla_actual, DB_NAME);
+                                $fks_entrantes = obtener_claves_foraneas_entrantes($conexion, $tabla_actual, DB_NAME);
+                            ?>
+                            <div class="reporte-container">
+                                <div class="form-header">
+                                    <h2><?= svg_icon('info', 20) ?> Reporte de Relaciones</h2>
+                                    <a href="?tabla=<?= $tabla_actual ?>" class="btn-cancelar"><?= svg_icon('x', 16) ?> Volver</a>
+                                </div>
+                                
+                                <!-- Sección 1: Registro Principal -->
+                                <div class="reporte-seccion">
+                                    <h3><?= svg_icon('file-text', 18) ?> Registro Principal</h3>
+                                    <?php render_tabla_html([$registro], $tabla_actual, '', $conexion, DB_NAME); ?>
+                                </div>
+                                
+                                <!-- Sección 2: FK Salientes (este registro apunta a...) -->
+                                <?php if (count($fks_salientes) > 0): ?>
+                                <div class="reporte-seccion">
+                                    <h3><?= svg_icon('box', 18) ?> Datos Referenciados por este Registro (FK Salientes)</h3>
+                                    <?php foreach ($fks_salientes as $columna_fk => $info_fk):
+                                        $valor_fk = $registro[$columna_fk];
+                                        if ($valor_fk !== null && $valor_fk !== ''):
+                                            $tabla_ref = $info_fk['tabla'];
+                                            $columna_ref = $info_fk['columna'];
+                                            
+                                            $sql_ref = "SELECT * FROM " . $tabla_ref . " WHERE " . $columna_ref . " = '" . mysqli_real_escape_string($conexion, $valor_fk) . "' LIMIT 1";
+                                            $result_ref = mysqli_query($conexion, $sql_ref);
+                                            
+                                            if ($result_ref && $fila_ref = mysqli_fetch_assoc($result_ref)):
+                                    ?>
+                                        <div class="reporte-item">
+                                            <h4><?= htmlspecialchars($columna_fk) ?> → <?= htmlspecialchars($tabla_ref) ?></h4>
+                                            <?php render_tabla_html([$fila_ref], $tabla_ref, '', $conexion, DB_NAME); ?>
+                                        </div>
+                                    <?php 
+                                            endif;
+                                        endif;
+                                    endforeach; ?>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <!-- Sección 3: FK Entrantes (otros registros apuntan a este) -->
+                                <?php if (count($fks_entrantes) > 0): ?>
+                                <div class="reporte-seccion">
+                                    <h3><?= svg_icon('user', 18) ?> Datos Relacionados que Apuntan a Este Registro (FK Entrantes)</h3>
+                                    <?php foreach ($fks_entrantes as $info_entrante):
+                                        $tabla_origen = $info_entrante['tabla'];
+                                        $columna_origen = $info_entrante['columna'];
+                                        $columna_ref = $info_entrante['columna_referenciada'];
+                                        $valor_pk = $registro[$pk];
+                                        
+                                        $sql_entrantes = "SELECT * FROM " . $tabla_origen . " WHERE " . $columna_origen . " = '" . mysqli_real_escape_string($conexion, $valor_pk) . "'";
+                                        $result_entrantes = mysqli_query($conexion, $sql_entrantes);
+                                        
+                                        if ($result_entrantes && mysqli_num_rows($result_entrantes) > 0):
+                                            $datos_entrantes = [];
+                                            $num_registros = mysqli_num_rows($result_entrantes);
+                                            while ($row = mysqli_fetch_assoc($result_entrantes)) {
+                                                $datos_entrantes[] = $row;
+                                            }
+                                    ?>
+                                        <div class="reporte-item">
+                                            <h4><?= htmlspecialchars($tabla_origen) ?> (<?= $num_registros ?> registros)</h4>
+                                            <?php render_tabla_html($datos_entrantes, $tabla_origen, '', $conexion, DB_NAME); ?>
+                                        </div>
+                                    <?php 
+                                        endif;
+                                    endforeach; ?>
+                                </div>
+                                <?php endif; ?>
                             </div>
                             <?php else: ?>
                                 <p class='no-data'><?= svg_icon('x', 16) ?> Registro no encontrado</p>
